@@ -44,5 +44,7 @@ public class PostVo {
 
     private String recommendPlace;
 
+    private Integer recommendPlaceId;
+
     private List<TopicNode> topicList;
 }

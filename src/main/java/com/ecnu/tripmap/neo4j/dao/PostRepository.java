@@ -11,6 +11,9 @@ import java.util.List;
 @Repository
 public interface PostRepository extends Neo4jRepository<PostNode, Long> {
 
+    @Override
+    <S extends PostNode> S save(S entity);
+
     @Query("MATCH (u:User) -[:COLLECT]-> (p:Post) WHERE u.user_id = $user_id RETURN (p)")
     List<PostNode> findUserCollectedPost(Integer user_id);
 
@@ -24,10 +27,15 @@ public interface PostRepository extends Neo4jRepository<PostNode, Long> {
     @Query("MATCH (u:User), (p:Post) WHERE u.user_id = $user_id AND p.post_id = $post_id CREATE (u) -[l:LIKE]-> (p) RETURN id(l)")
     Integer createLikeRelationship(Integer user_id, Integer post_id);
 
+    @Query("MATCH (u:User), (p:Post) WHERE u.user_id = $user_id AND p.post_id = $post_id CREATE (u) -[p:PUBLISH]-> (p) RETURN id(p)")
+    Integer createPublishRelationship(Integer post_id,Integer user_id);
+
     @Query("MATCH (u:User) -[l:LIKE]-> (p:Post) WHERE u.user_id = $user_id AND p.post_id = $post_id RETURN id(l)")
     Integer isLiked(Integer user_id, Integer post_id);
 
     @Query("MATCH (u:User) -[c:COLLECT]-> (p:Post) WHERE u.user_id = $user_id AND p.post_id = $post_id RETURN id(c)")
     Integer isCollected(Integer user_id, Integer post_id);
+
+
 
 }

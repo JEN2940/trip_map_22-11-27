@@ -16,6 +16,9 @@ public interface UserRepository extends Neo4jRepository<UserNode, Long> {
     @Query("MATCH (u:User) -[:PUBLISH]-> (p:Post) WHERE p.post_id = $post_id RETURN (u)")
     UserNode findPublisher(Integer post_id);
 
+    @Query("MATCH (u:User)  WHERE u.user_id = $user_id RETURN (u)")
+    UserNode fineUserById(Integer user_id);
+
     @Query("MATCH (u1:User) -[:FOLLOW]-> (u2:User) WHERE u1.user_id = $user_id RETURN(u2)")
     List<UserNode> findUserFollowedUser(Integer user_id);
 

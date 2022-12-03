@@ -18,4 +18,10 @@ public interface PlaceRepository extends Neo4jRepository<PlaceNode, Long> {
 
     @Query("MATCH (u:User) , (p:Place) WHERE u.user_id = $user_id AND p.place_id = $place_id CREATE (u) -[s:STORE]-> (p) RETURN id(s)")
     Integer createStoreRelationship(Integer user_id, Integer place_id);
+
+    @Query("MATCH (pa:Place) WHERE pa.place_address = $place_address RETURN (pa)")
+    PlaceNode findPlaceByAddress(String place_address);
+
+    @Query("MATCH (po:Post) , (pa:Place) WHERE po.post_id = $post_id AND pa.place_id = $place_id CREATE (po) -[s:SUGGEST]-> (pa) RETURN id(s)")
+    Integer createRecommendRelationship(Integer post_id,Integer place_id);
 }

@@ -16,7 +16,8 @@ public enum ResponseStatus {
     USER_NOT_EXIST(-5, "用户不存在"),
     NOT_LOGIN(-6, "尚未登录"),
     POST_NOT_EXIST(-7, "笔记不存在"),
-    PLACE_NOT_EXIST(-8,"地点不存在");
+    PLACE_NOT_EXIST(-8,"地点不存在"),
+    PUBLISH_FAIL(-9,"笔记发布失败，请联系工作人员");
 
 
     private final Integer code;

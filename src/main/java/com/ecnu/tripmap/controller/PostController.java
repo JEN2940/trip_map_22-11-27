@@ -1,5 +1,6 @@
 package com.ecnu.tripmap.controller;
 
+import com.ecnu.tripmap.model.vo.PostPv;
 import com.ecnu.tripmap.model.vo.PostVo;
 import com.ecnu.tripmap.mysql.entity.User;
 import com.ecnu.tripmap.result.Response;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/post")
@@ -21,6 +23,21 @@ public class PostController {
 
     @Resource
     private PostService postService;
+
+    @ApiOperation(value = "新增帖子，需要传入帖子")
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+            @ApiResponse(code = -9, message = "笔记发布失败，请联系工作人员")
+    })
+    @PostMapping("/publish")
+    public Response publish(@RequestBody @Valid @ApiParam(name = "postVo", value = "必须传入的有图片集，标题，帖子详情，话题列表Array，地点") PostPv postPv) {
+//        UserVo user = (UserVo) session.getAttribute("user");
+//        PostVo postInfo = postService.publish(postPv,user.getUserId());
+        PostVo postInfo = postService.publish(postPv,1);
+        if (postInfo == null)
+            return  Response.status(ResponseStatus.PUBLISH_FAIL);
+        return Response.success(postInfo);
+    }
 
     // TODO
     @ApiOperation(value = "查询帖子详细信息，需要传入笔记id")

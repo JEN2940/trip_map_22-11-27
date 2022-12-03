@@ -14,4 +14,6 @@ public interface TopicRepository extends Neo4jRepository<PostNode, Long> {
     @Query("MATCH (p:Post) -[BELONG]-> (t:Topic) WHERE p.post_id = $post_id RETURN (t)")
     List<TopicNode> findPostTopics(Integer post_id);
 
+    @Query(" (p:Post), (t:Topic) WHERE p.post_id = $post_id AND t.topic_id = $topic_id CREATE (p) -[b:BELONG]-> (t) RETURN id(b)")
+    Integer createBelongRelationship(Integer post_id, Integer topic_id);
 }

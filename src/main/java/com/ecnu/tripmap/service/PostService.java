@@ -1,5 +1,6 @@
 package com.ecnu.tripmap.service;
 
+import com.ecnu.tripmap.model.vo.PostPv;
 import com.ecnu.tripmap.model.vo.PostVo;
 import com.ecnu.tripmap.result.Response;
 
@@ -10,5 +11,7 @@ public interface PostService {
     Response likePost(Integer user_id, Integer post_id);
 
     PostVo findPostInfo(Integer post_id, Integer user_id);
+
+    PostVo publish(PostPv postPv, Integer user_id);
 
 }
