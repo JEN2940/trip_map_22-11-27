@@ -1,9 +1,6 @@
 package com.ecnu.tripmap.mysql.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,7 +12,7 @@ import java.util.Date;
 @NoArgsConstructor
 @TableName("post")
 public class Post {
-    @TableId
+    @TableId(type = IdType.AUTO)
     private Integer postId;
 
     @TableField(value = "post_publish_time", fill = FieldFill.INSERT)

@@ -1,24 +1,32 @@
 package com.ecnu.tripmap;
 
 import com.ecnu.tripmap.model.vo.PostBrief;
+import com.ecnu.tripmap.model.vo.PostPv;
+import com.ecnu.tripmap.model.vo.PostVo;
 import com.ecnu.tripmap.mysql.entity.Post;
 import com.ecnu.tripmap.neo4j.dao.PlaceRepository;
 import com.ecnu.tripmap.neo4j.dao.PostRepository;
 import com.ecnu.tripmap.neo4j.dao.UserRepository;
+import com.ecnu.tripmap.service.Impl.PostServiceImpl;
 import com.ecnu.tripmap.service.Impl.UserServiceImpl;
 import com.ecnu.tripmap.utils.CopyUtil;
+import com.ecnu.tripmap.utils.SimilarityUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @SpringBootTest
 class TripMapApplicationTests {
 
     @Autowired
     private UserServiceImpl userService;
+    @Autowired
+    private PostServiceImpl postService;
     @Autowired
     private PlaceRepository placeRepository;
     @Autowired
@@ -27,6 +35,9 @@ class TripMapApplicationTests {
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private SimilarityUtil similarityUtil;
 
     @Test
     void testSave() {
@@ -64,6 +75,35 @@ class TripMapApplicationTests {
         String pass = "123456";
         String encode = passwordEncoder.encode(pass);
         System.out.println(encode);
+    }
+
+    @Test
+    void t(){
+        List<Integer> recommend = similarityUtil.recommend(3);
+        for (Integer integer : recommend) {
+            System.out.println(integer);
+        }
+    }
+
+    @Test
+    void publishTest(){
+        PostPv postPv = new PostPv();
+        postPv.setPostDesc("123");
+        postPv.setPostTitle("123");
+        postPv.setPostImageList("123");
+        postPv.setRecommendPlace("上海植物园");
+        List<String> topics = new ArrayList<>();
+        topics.add("上海");
+        topics.add("上海旅游攻略");
+        postPv.setTopicList(topics);
+        PostVo postVo = postService.publish(postPv,1);
+        System.out.println(postVo);
+    }
+
+    @Test
+    void home_page(){
+        List<PostBrief> posts = postService.postList(1);
+        System.out.println(posts);
     }
 
 }

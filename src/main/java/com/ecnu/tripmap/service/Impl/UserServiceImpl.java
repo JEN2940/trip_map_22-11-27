@@ -20,10 +20,12 @@ import com.ecnu.tripmap.result.Response;
 import com.ecnu.tripmap.result.ResponseStatus;
 import com.ecnu.tripmap.service.UserService;
 import com.ecnu.tripmap.utils.CopyUtil;
+import io.swagger.models.auth.In;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +51,8 @@ public class UserServiceImpl implements UserService {
 
     @Resource
     private PasswordEncoder passwordEncoder;
+    @Resource
+    private HttpSession session;
 
     @Override
     public Response login(User user) {
@@ -60,7 +64,7 @@ public class UserServiceImpl implements UserService {
             return Response.status(ResponseStatus.ACCOUNT_OR_PASSWORD_NOT_CORRECT);
         }
         if (passwordEncoder.matches(password, userFound.getUserPassword())) {
-            return Response.success(userFound.getUserId());
+            return Response.success(userFound);
         }
         return Response.status(ResponseStatus.ACCOUNT_OR_PASSWORD_NOT_CORRECT);
     }
@@ -183,6 +187,7 @@ public class UserServiceImpl implements UserService {
             copy.setUserNickname(one.getUserNickname());
             copy.setUserAvatar(one.getUserAvatar());
             copy.setUserId(one.getUserId());
+
             users.add(copy);
         }
         return users;
@@ -222,6 +227,35 @@ public class UserServiceImpl implements UserService {
         one1.setUserFanCount(one.getUserFanCount() + 1);
         userMapper.updateById(one1);
         return Response.success(relationship);
+    }
+
+    public Response cancelFollowAUser(Integer user_id,Integer follow_id){
+        //取消关注
+        userRepository.cancelFollowRelationship(user_id,follow_id);
+        //关注用户
+        User one = new LambdaQueryChainWrapper<>(userMapper)
+                .eq(User::getUserId, user_id)
+                .one();
+        one.setUserFollowCount(one.getUserFollowCount() - 1);
+        userMapper.updateById(one);
+        //被关注用户
+        User one1 = new LambdaQueryChainWrapper<>(userMapper)
+                .eq(User::getUserId, follow_id)
+                .one();
+        one1.setUserFanCount(one.getUserFanCount() - 1);
+        userMapper.updateById(one1);
+        return Response.success();
+    }
+
+    @Override
+    public Response deleteAPost(Integer user_id, Integer post_id) {
+        userRepository.deleteAPost(user_id,post_id);
+        User one = new LambdaQueryChainWrapper<>(userMapper)
+                .eq(User::getUserId, user_id)
+                .one();
+        one.setUserPostCount(one.getUserPostCount()-1);
+        userMapper.updateById(one);
+        return Response.success();
     }
 
 }

@@ -27,8 +27,6 @@ public class UserController {
     @Resource
     private UserServiceImpl userService;
 
-    @Resource
-    private PostServiceImpl postService;
 
     @ApiOperation(value = "登录，若session之中已经有用户的信息，那么直接放行")
     @ApiResponses({
@@ -39,7 +37,7 @@ public class UserController {
     public Response login(@RequestBody @Valid @ApiParam(name = "user", value = "传入账号和密码即可") User user) {
         Response response = userService.login(user);
         if (response.getCode() == 0) {
-            UserVo copy = CopyUtil.copy(user, UserVo.class);
+            UserVo copy = CopyUtil.copy(response.getData(), UserVo.class);
             session.setAttribute("user", copy);
         }
         return response;
@@ -69,8 +67,8 @@ public class UserController {
     })
     @GetMapping("/{user_id}")
     public Response info(@ApiParam(name = "user_id", value = "路径参数，要查找的id") @PathVariable(name = "user_id") Integer user_id) {
-        User user = (User) session.getAttribute("user");
-        if (user != null && Objects.equals(user.getUserId(), user_id)) {
+        UserVo user = (UserVo) session.getAttribute("user");
+        if (Objects.equals(user.getUserId(), user_id)) {
             return Response.success(user);
         }
 
@@ -141,10 +139,34 @@ public class UserController {
     })
     @PutMapping("/follow/{follow_id}")
     public Response followUser(@ApiParam(name = "follow_id", value = "需要关注的用户的id") @PathVariable(name = "follow_id") Integer follow_id) {
-        User user = (User) session.getAttribute("user");
-        if (user == null)
-            return Response.status(ResponseStatus.NOT_LOGIN);
+        UserVo user = (UserVo) session.getAttribute("user");
         return userService.followAUser(user.getUserId(), follow_id);
     }
+
+    @ApiOperation(value="取消关注用户，需传入要取消关注的用户id")
+    @ApiResponses({
+            @ApiResponse(code=0,message = "成功"),
+            @ApiResponse(code=-6,message = "尚未登录"),
+            @ApiResponse(code=-5,message = "用户不存在")
+    })
+    @PutMapping("/cancel/follow/{follow_id}")
+    public Response cancelFollowUser(@ApiParam(name = "follow_id",value = "需要取消关注的用户的id")@PathVariable(name = "follow_id") Integer follow_id){
+        UserVo user=(UserVo) session.getAttribute("user");
+        return userService.cancelFollowAUser(user.getUserId(), follow_id);
+    }
+
+
+    @ApiOperation(value="删除帖子，需要传入需要删除的帖子的id")
+    @ApiResponses({
+            @ApiResponse(code=0,message = "成功"),
+            @ApiResponse(code=-6,message = "尚未登录"),
+            @ApiResponse(code=-5,message = "用户不存在")
+    })
+    @PutMapping("/delete/post/{post_id}")
+    public Response deleteAPost(@ApiParam(name = "post_id",value = "需要删除的帖子的id")@PathVariable(name = "post_id") Integer post_id){
+        UserVo user=(UserVo) session.getAttribute("user");
+        return userService.deleteAPost(user.getUserId(), post_id);
+    }
+
 
 }

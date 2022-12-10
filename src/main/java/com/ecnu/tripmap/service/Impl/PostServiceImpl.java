@@ -1,12 +1,15 @@
 package com.ecnu.tripmap.service.Impl;
 
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
+import com.ecnu.tripmap.model.vo.PostBrief;
 import com.ecnu.tripmap.model.vo.PostPv;
 import com.ecnu.tripmap.model.vo.PostVo;
 import com.ecnu.tripmap.model.vo.UserVo;
 import com.ecnu.tripmap.mysql.entity.Post;
+import com.ecnu.tripmap.mysql.entity.Topic;
 import com.ecnu.tripmap.mysql.entity.User;
 import com.ecnu.tripmap.mysql.mapper.PostMapper;
+import com.ecnu.tripmap.mysql.mapper.TopicMapper;
 import com.ecnu.tripmap.mysql.mapper.UserMapper;
 import com.ecnu.tripmap.neo4j.dao.PlaceRepository;
 import com.ecnu.tripmap.neo4j.dao.PostRepository;
@@ -20,11 +23,11 @@ import com.ecnu.tripmap.result.Response;
 import com.ecnu.tripmap.result.ResponseStatus;
 import com.ecnu.tripmap.service.PostService;
 import com.ecnu.tripmap.utils.CopyUtil;
+import com.ecnu.tripmap.utils.SimilarityUtil;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class PostServiceImpl implements PostService {
@@ -47,6 +50,9 @@ public class PostServiceImpl implements PostService {
     @Resource
     private UserMapper userMapper;
 
+    @Resource
+    private TopicMapper topicMapper;
+
     @Override
     public Response collectPost(Integer user_id, Integer post_id) {
         Integer collectRelationship = postRepository.createCollectRelationship(user_id, post_id);
@@ -64,6 +70,22 @@ public class PostServiceImpl implements PostService {
         userMapper.updateById(user);
         return Response.success(collectRelationship);
     }
+    public  Response cancelCollectPost(Integer user_id,Integer post_id){
+        //取消收藏
+        postRepository.cancelPostCollect(user_id,post_id);
+        //更新
+        Post post = new LambdaQueryChainWrapper<>(postMapper)
+                .eq(Post::getPostId, post_id)
+                .one();
+        post.setPostCollectCount(post.getPostCollectCount() - 1);
+        postMapper.updateById(post);
+        User user = new LambdaQueryChainWrapper<>(userMapper)
+                .eq(User::getUserId, user_id)
+                .one();
+        user.setUserCollectPostCount(user.getUserCollectPostCount() - 1);
+        userMapper.updateById(user);
+        return Response.success();
+    }
 
     @Override
     public Response likePost(Integer user_id, Integer post_id) {
@@ -79,6 +101,18 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public Response cancelLikePost(Integer user_id, Integer post_id) {
+        postRepository.cancelLikePost(user_id,post_id);
+        Post post = new LambdaQueryChainWrapper<>(postMapper)
+                .eq(Post::getPostId, post_id)
+                .one();
+        post.setPostLikeCount(post.getPostLikeCount() - 1);
+        postMapper.updateById(post);
+        return Response.success();
+    }
+
+
+    @Override
     public PostVo findPostInfo(Integer post_id, Integer user_id){
         Post post = new LambdaQueryChainWrapper<>(postMapper)
                 .eq(Post::getPostId,post_id)
@@ -87,15 +121,16 @@ public class PostServiceImpl implements PostService {
             return null;
         PostVo copy = CopyUtil.copy(post,PostVo.class);
 
+//        用户相关信息
         UserNode publisher = userRepository.findPublisher(post_id);
         copy.setUserId(publisher.getUserId());
         copy.setUserAvatar(publisher.getUserAvatar());
         copy.setUserNickName(publisher.getUserNickname());
 
-        PlaceNode place = placeRepository.findRecommendPlace(post_id);
-        copy.setRecommendPlace(place.getPlaceAddress());
-        copy.setRecommendPlaceId(place.getPlaceId());
 
+        PlaceNode place = placeRepository.findRecommendPlace(post_id);
+        copy.setRecommendPlaceId(place.getPlaceId());
+        copy.setRecommendPlace(place.getPlaceAddress());
         //是否关注，点赞，收藏
         Integer isLiked = postRepository.isLiked(user_id, post_id);
         if (isLiked == null)
@@ -111,12 +146,24 @@ public class PostServiceImpl implements PostService {
         if (isFollowed == null)
             copy.setFollowed(false);
         else copy.setFollowed(true);
+        //是否收藏地点
+        Integer isPlaceCollected=postRepository.isPlaceCollected(user_id, place.getPlaceId());
+        if(isPlaceCollected==null)
+            copy.setPlaceCollected(false);
+        else copy.setPlaceCollected(true);
 
         //话题列表
         List<TopicNode> topics = topicRepository.findPostTopics(post_id);
-        copy.setTopicList(topics);
-
-
+        List<Topic> topicList = new ArrayList<>();
+        Topic topic = new Topic();
+        TopicNode topicNode = new TopicNode();
+        for (int i = 0; i < topics.size(); i++){
+            topicNode = topics.get(i);
+            topic.setTopicId(topicNode.getTopicId());
+            topic.setTopicName(topicNode.getTopicName());
+            topicList.add(topic);
+        }
+        copy.setTopicList(topicList);
         return copy;
     }
 
@@ -130,21 +177,42 @@ public class PostServiceImpl implements PostService {
         if (insert != 1){
             return null;
         }
-//        post.setPostId(10000);
 
-        PostNode postNode = CopyUtil.copy(postPv,PostNode.class);
-        postRepository.save(postNode);
-        Integer publishRelationShip = postRepository.createPublishRelationship(postNode.getPostId(),user_id);
+
+//        PostNode postNode = CopyUtil.copy(postPv,PostNode.class);
+//        postRepository.save(postNode);
+        PostNode postNode = postRepository.createPostNode(post.getPostId());
+        Integer publishRelationShip = postRepository.createPublishRelationship(post.getPostId(),user_id);
         if (publishRelationShip == null)
             return null;
 
-        List<TopicNode> topics = postPv.getTopicList();
-        for (int i = 0; i < topics.size();i++){
-            TopicNode topicNode = topics.get(i);
-            Integer belong = topicRepository.createBelongRelationship(post.getPostId(),topicNode.getTopicId());
-            if (belong == null)
-                return null;
+        List<String> topicNames = postPv.getTopicList();
+        List<Topic> topics = new ArrayList<>();
+        if (topicNames != null){
+            for (int i = 0; i < topicNames.size();i++){
+                String topicname = topicNames.get(i);
+                List<Topic> topiclist = new LambdaQueryChainWrapper<>(topicMapper)
+                        .eq(Topic::getTopicName, topicname)
+                        .list();
+                Topic topic = new Topic();
+                if (topiclist == null){
+                    topic.setTopicName(topicname);
+                    int insertTopic = topicMapper.insert(topic);
+                    if (insertTopic != 1)
+                        return null;
+                    TopicNode topicNode = topicRepository.createTopicNode(topic.getTopicId(),topicname);
+                    if (topicNode == null)
+                        return null;
+                }else {
+                    topic = topiclist.get(0);
+                }
+                Integer belong = topicRepository.createBelongRelationship(post.getPostId(),topic.getTopicId());
+                if (belong == null)
+                    return null;
+                topics.add(topic);
+            }
         }
+
 
         PlaceNode placeNode = placeRepository.findPlaceByAddress(postPv.getRecommendPlace());
         Integer recommend = placeRepository.createRecommendRelationship(post.getPostId(),placeNode.getPlaceId());
@@ -170,5 +238,41 @@ public class PostServiceImpl implements PostService {
 
         return postVo;
 
+    }
+
+    @Override
+    public List<PostBrief> postList(Integer user_id){
+        SimilarityUtil recommendPlace = new SimilarityUtil();
+        List<Integer> placesId = recommendPlace.recommend(user_id);
+        List<PostNode> postNodes = new ArrayList<>();
+        List<PostBrief> posts = new ArrayList<>();
+        for (Integer placeID : placesId){
+            List<PostNode> places_post = postRepository.findPlacePostList(placeID);
+            postNodes.addAll(places_post);
+        }
+        for (PostNode post : postNodes){
+            Post one = new LambdaQueryChainWrapper<>(postMapper)
+                    .eq(Post::getPostId, post.getPostId())
+                    .one();
+            PostBrief copy = CopyUtil.copy(one, PostBrief.class);
+            String postImageList = copy.getPostImageList();
+            int i = postImageList.indexOf(',');
+            if (i != -1) {
+                postImageList = postImageList.substring(0, i);
+            }
+            copy.setPostImageList(postImageList);
+            String postDesc = copy.getPostDesc();
+            if (postDesc.length() > 50) {
+                postDesc = postDesc.substring(0, 50);
+            }
+            copy.setPostDesc(postDesc);
+            UserNode publisher = userRepository.findPublisher(copy.getPostId());
+            copy.setUserAvatar(publisher.getUserAvatar());
+            copy.setUserName(publisher.getUserNickname());
+            copy.setUserId(publisher.getUserId());
+            posts.add(copy);
+        }
+        Collections.shuffle(posts);
+        return posts;
     }
 }

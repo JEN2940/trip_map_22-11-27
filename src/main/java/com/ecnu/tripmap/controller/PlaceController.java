@@ -1,6 +1,7 @@
 package com.ecnu.tripmap.controller;
 
 
+import com.ecnu.tripmap.model.vo.UserVo;
 import com.ecnu.tripmap.mysql.entity.User;
 import com.ecnu.tripmap.neo4j.dao.PlaceRepository;
 import com.ecnu.tripmap.result.Response;
@@ -29,6 +30,19 @@ public class PlaceController {
     private PlaceRepository placeRepository;
 
     //TODO
+    @ApiOperation(value = "获取地点推荐，无传入参数")
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+            @ApiResponse(code = -11, message = "地点推荐失败，请联系工作人员")
+    })
+    @PutMapping("{address_id}/collect")
+    public Response recommendPlaces() {
+        UserVo user = (UserVo) session.getAttribute("user");
+        return Response.success();
+    }
+
+
+    //TODO
     @ApiOperation(value = "收藏一个地点，需要传入地点id")
     @ApiResponses({
             @ApiResponse(code = 0, message = "成功"),
@@ -37,11 +51,20 @@ public class PlaceController {
     })
     @PutMapping("{address_id}/collect")
     public Response collectPlace(@ApiParam(name = "place_id", value = "要收藏的地点id") @PathVariable Integer address_id) {
-//        User user = (User) session.getAttribute("user");
-//        if (user == null)
-//            return Response.status(ResponseStatus.NOT_LOGIN);
-//        return placeService.collectPlace(user.getUserId(), address_id);
-        return placeService.collectPlace(1, address_id);
+        UserVo user = (UserVo) session.getAttribute("user");
+        return placeService.collectPlace(user.getUserId(), address_id);
+    }
+
+    @ApiOperation(value = "取消收藏一个地点，需要传入地点id")
+    @ApiResponses({
+            @ApiResponse(code = 0, message = "成功"),
+            @ApiResponse(code = -6, message = "尚未登录"),
+            @ApiResponse(code = -8, message = "地点不存在")
+    })
+    @PutMapping("/cancel/{address_id}/collect")
+    public Response cancelCollectPlace(@ApiParam(name = "place_id",value = "要取消收藏的地点id")@PathVariable Integer address_id){
+        UserVo user =(UserVo) session.getAttribute("user");
+        return placeService.cancelCollectPlace(user.getUserId(),address_id);
     }
 
 }

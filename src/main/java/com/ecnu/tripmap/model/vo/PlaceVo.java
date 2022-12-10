@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PlaceVo {
+    private Integer placeId;
 
     private String placeProvince;
 

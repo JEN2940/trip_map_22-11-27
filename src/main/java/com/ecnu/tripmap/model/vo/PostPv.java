@@ -1,7 +1,6 @@
 package com.ecnu.tripmap.model.vo;
 
 
-import com.ecnu.tripmap.neo4j.node.TopicNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,5 +19,5 @@ public class PostPv {
 
     private String recommendPlace;
 
-    private List<TopicNode> topicList;
+    private List<String> topicList;
 }

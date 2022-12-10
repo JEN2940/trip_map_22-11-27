@@ -6,6 +6,7 @@ import com.ecnu.tripmap.model.vo.UserBrief;
 import com.ecnu.tripmap.model.vo.UserVo;
 import com.ecnu.tripmap.mysql.entity.User;
 import com.ecnu.tripmap.result.Response;
+import io.swagger.models.auth.In;
 
 import java.util.List;
 
@@ -25,6 +26,10 @@ public interface UserService {
     List<PostBrief> findPublishPostList(Integer user_id);
 
     Response followAUser(Integer user_id, Integer follow_id);
+
+    Response cancelFollowAUser(Integer user_id,Integer follow_id);
+
+    Response deleteAPost(Integer user_id,Integer post_id);
 
     List<UserBrief> findUserFollowedUser(Integer user_id);
 

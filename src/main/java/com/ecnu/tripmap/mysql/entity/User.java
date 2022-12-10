@@ -24,8 +24,6 @@ public class User {
     @TableField("user_avatar")
     private String userAvatar;
 
-    @NotBlank
-    @NotEmpty
     @TableField("user_password")
     private String userPassword;
 

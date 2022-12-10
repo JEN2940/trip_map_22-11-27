@@ -9,11 +9,19 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TopicRepository extends Neo4jRepository<PostNode, Long> {
+public interface TopicRepository extends Neo4jRepository<TopicNode, Long> {
 
-    @Query("MATCH (p:Post) -[BELONG]-> (t:Topic) WHERE p.post_id = $post_id RETURN (t)")
+    @Query ("CREATE (t:Topic{topic_id : $topic_id, topic_name : $topic_name}) RETURN t")
+    TopicNode createTopicNode(Integer topic_id, String topic_name);
+
+    @Query("MATCH (p:Post) -[:BELONG]-> (t:Topic) WHERE p.post_id = $post_id RETURN (t)")
     List<TopicNode> findPostTopics(Integer post_id);
 
-    @Query(" (p:Post), (t:Topic) WHERE p.post_id = $post_id AND t.topic_id = $topic_id CREATE (p) -[b:BELONG]-> (t) RETURN id(b)")
+    @Query("MATCH (t:Topic) WHERE t.topic_name = $topic_name RETURN t")
+    TopicNode fineTopicByName(String topic_name);
+
+    @Query("MATCH (p:Post), (t:Topic) WHERE p.post_id = $post_id AND t.topic_id = $topic_id CREATE (p) -[b:BELONG]-> (t) RETURN id(b)")
     Integer createBelongRelationship(Integer post_id, Integer topic_id);
+
+
 }

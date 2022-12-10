@@ -3,6 +3,7 @@ package com.ecnu.tripmap.model.vo;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.ecnu.tripmap.mysql.entity.Topic;
 import com.ecnu.tripmap.neo4j.node.PlaceNode;
 import com.ecnu.tripmap.neo4j.node.TopicNode;
 import lombok.AllArgsConstructor;
@@ -42,9 +43,10 @@ public class PostVo {
 
     private boolean isFollowed;
 
+
     private String recommendPlace;
-
     private Integer recommendPlaceId;
+    private boolean isPlaceCollected;
 
-    private List<TopicNode> topicList;
+    private List<Topic> topicList;
 }

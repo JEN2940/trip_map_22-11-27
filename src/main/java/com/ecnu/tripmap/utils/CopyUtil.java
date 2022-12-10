@@ -41,7 +41,7 @@ public class CopyUtil {
         }
         T obj = null;
         try {
-            obj = clazz.newInstance();
+            obj = clazz.getConstructor().newInstance();
         } catch (Exception e) {
             e.printStackTrace();
         }

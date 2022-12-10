@@ -23,4 +23,5 @@ public class UserBrief {
     private String userAvatar;
 
     private String userAccount;
+    private boolean isFollowed;
 }

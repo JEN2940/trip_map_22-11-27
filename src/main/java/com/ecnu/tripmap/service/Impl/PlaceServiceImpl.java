@@ -32,4 +32,16 @@ public class PlaceServiceImpl implements PlaceService {
         userMapper.updateById(user);
         return Response.success(collectRelationship);
     }
+
+    public Response cancelCollectPlace(Integer user_id,Integer place_id){
+        //删除收藏关系
+        placeRepository.cancelStoreRelationship(user_id,place_id);
+        User user = new LambdaQueryChainWrapper<>(userMapper)
+                .eq(User::getUserId, user_id)
+                .one();
+        user.setUserCollectLocationCount(user.getUserCollectLocationCount() - 1);
+        userMapper.updateById(user);
+        return Response.success();
+
+    }
 }
