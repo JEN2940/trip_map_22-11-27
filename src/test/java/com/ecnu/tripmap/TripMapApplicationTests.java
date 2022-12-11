@@ -1,5 +1,6 @@
 package com.ecnu.tripmap;
 
+import com.ecnu.tripmap.model.vo.PlaceBiref;
 import com.ecnu.tripmap.model.vo.PostBrief;
 import com.ecnu.tripmap.model.vo.PostPv;
 import com.ecnu.tripmap.model.vo.PostVo;
@@ -7,8 +8,10 @@ import com.ecnu.tripmap.mysql.entity.Post;
 import com.ecnu.tripmap.neo4j.dao.PlaceRepository;
 import com.ecnu.tripmap.neo4j.dao.PostRepository;
 import com.ecnu.tripmap.neo4j.dao.UserRepository;
+import com.ecnu.tripmap.service.Impl.PlaceServiceImpl;
 import com.ecnu.tripmap.service.Impl.PostServiceImpl;
 import com.ecnu.tripmap.service.Impl.UserServiceImpl;
+import com.ecnu.tripmap.service.PlaceService;
 import com.ecnu.tripmap.utils.CopyUtil;
 import com.ecnu.tripmap.utils.SimilarityUtil;
 import org.junit.jupiter.api.Test;
@@ -27,6 +30,8 @@ class TripMapApplicationTests {
     private UserServiceImpl userService;
     @Autowired
     private PostServiceImpl postService;
+    @Autowired
+    private PlaceService placeService;
     @Autowired
     private PlaceRepository placeRepository;
     @Autowired
@@ -104,6 +109,16 @@ class TripMapApplicationTests {
     void home_page(){
         List<PostBrief> posts = postService.postList(1);
         System.out.println(posts);
+    }
+
+    @Test
+    void recommendPlaces(){
+        List<PlaceBiref> places = placeService.recommendPlaces(1);
+        for (PlaceBiref place:places){
+            System.out.println(place.getPlaceId().toString());
+            System.out.println(place.getPlaceAddress());
+        }
+
     }
 
 }

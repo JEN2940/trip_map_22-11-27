@@ -53,6 +53,9 @@ public class PostServiceImpl implements PostService {
     @Resource
     private TopicMapper topicMapper;
 
+    @Resource
+    private SimilarityUtil similarityUtil;
+
     @Override
     public Response collectPost(Integer user_id, Integer post_id) {
         Integer collectRelationship = postRepository.createCollectRelationship(user_id, post_id);
@@ -242,11 +245,12 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostBrief> postList(Integer user_id){
-        SimilarityUtil recommendPlace = new SimilarityUtil();
-        List<Integer> placesId = recommendPlace.recommend(user_id);
+
+        List<Integer> placesId = similarityUtil.recommend(user_id);
         List<PostNode> postNodes = new ArrayList<>();
         List<PostBrief> posts = new ArrayList<>();
-        for (Integer placeID : placesId){
+        for (int i = 0;i < 10; i++){
+            Integer placeID = placesId.get(i);
             List<PostNode> places_post = postRepository.findPlacePostList(placeID);
             postNodes.addAll(places_post);
         }

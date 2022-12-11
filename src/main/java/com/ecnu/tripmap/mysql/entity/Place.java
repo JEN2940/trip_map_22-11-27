@@ -13,10 +13,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @TableName("place")
 public class Place {
-    @TableId(type = IdType.AUTO)
-    private Long id;
+//    @TableId(type = IdType.AUTO)
+//    private Long id;
 
-    @TableField("place_id")
+//    @TableField("place_id")
+    @TableId(type = IdType.AUTO)
     private Integer placeId;
 
     @TableField("place_province")

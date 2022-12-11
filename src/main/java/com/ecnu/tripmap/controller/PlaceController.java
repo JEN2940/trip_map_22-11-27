@@ -1,6 +1,7 @@
 package com.ecnu.tripmap.controller;
 
 
+import com.ecnu.tripmap.model.vo.PlaceBiref;
 import com.ecnu.tripmap.model.vo.UserVo;
 import com.ecnu.tripmap.mysql.entity.User;
 import com.ecnu.tripmap.neo4j.dao.PlaceRepository;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
+import java.util.List;
 
 @RestController
 @RequestMapping("/address")
@@ -35,10 +37,11 @@ public class PlaceController {
             @ApiResponse(code = 0, message = "成功"),
             @ApiResponse(code = -11, message = "地点推荐失败，请联系工作人员")
     })
-    @PutMapping("{address_id}/collect")
+    @PutMapping("recommend")
     public Response recommendPlaces() {
         UserVo user = (UserVo) session.getAttribute("user");
-        return Response.success();
+        List<PlaceBiref> places = placeService.recommendPlaces(user.getUserId());
+        return Response.success(places);
     }
 
 
